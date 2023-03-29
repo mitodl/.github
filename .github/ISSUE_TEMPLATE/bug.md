@@ -16,6 +16,7 @@ about: "Report an error condition or unexpected behavior"
 ## Steps to Reproduce
 <!--- Provide a link to a live example, or an unambiguous set of steps to -->
 <!--- reproduce this bug. Include code to reproduce, if relevant -->
+<!-- delete any unused steps -->
 1.
 2.
 3.
@@ -29,5 +30,8 @@ about: "Report an error condition or unexpected behavior"
 <!--- Not obligatory, but suggest a fix/reason for the bug, -->
 <!--- or ideas how to implement the addition or change -->
 
-## Related Issues
+```[tasklist]
+## Related Issues (optional; remove this section if empty) 
 <!--- If there are any other issues or bug reports that relate to this problem please link them here. --->
+- [ ]
+```
