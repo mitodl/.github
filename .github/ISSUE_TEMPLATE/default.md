@@ -1,6 +1,6 @@
 ---
 name: Technical Issue Template
-about: Capture user stories for product related features
+about: Capture details of technical issues (e.g. tech debt, upgrades, refactoring, etc.)
 ---
 
 # Description/Context
@@ -9,3 +9,4 @@ about: Capture user stories for product related features
 
 # Plan/Design
 <!--- How do you plan to achieve the stated goals? --->
+<!--- Include any design documents or visual mockups as relevant --->

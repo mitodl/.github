@@ -16,4 +16,4 @@ about: Capture user stories for product related features
 
 # Plan/Design
 <!--- How do you plan to achieve the stated goals? --->
-
+<!--- Include any design documents or visual mockups as relevant --->
