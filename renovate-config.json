@@ -1,0 +1,29 @@
+{
+  "extends": [
+    ":automergeMinor",
+    ":rebaseStalePrs",
+    ":recommended",
+    ":separateMajorReleases",
+    "config:base"
+  ],
+  "schedule": [
+    "every weekend"
+  ],
+  "timezone": "US/Eastern",
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch",
+      "matchPackagePatterns": [
+        "*"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ]
+    }
+  ]
+}
