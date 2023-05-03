@@ -4,8 +4,6 @@
     ":rebaseStalePrs",
     ":separateMajorReleases",
     "config:base",
-    "group:allNonMajor",
-    "group:recommended"
   ],
   "schedule": [
     "every weekend"
