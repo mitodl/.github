@@ -11,5 +11,21 @@
   "timezone": "US/Eastern",
   "lockFileMaintenance": {
     "enabled": true
-  }
+  },
+  "packageRules": [
+    {
+      "groupName": "all non-major dev-dependencies",
+      "groupSlug": "all-minor-dev-patch",
+      "matchPackagePatterns": [
+        "*"
+      ],
+      "matchDepTypes": [
+        "devDependencies"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ]
+    }
+  ]
 }
