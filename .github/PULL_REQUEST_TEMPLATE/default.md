@@ -10,13 +10,12 @@ name: Pull Request
 # Description (What does it do?)
 <!--- Describe your changes in detail -->
 
-<!---
-## Screenshots (if appropriate):
+# Screenshots (if appropriate):
+<!--- optional - delete if empty --->
 - [ ] Desktop screenshots
 - [ ] Mobile width screenshots
---->
 
-## How can this be tested?
+# How can this be tested?
 <!---
 Please describe in detail how your changes have been tested.
 Include details of your testing environment, any set-up required
@@ -25,7 +24,8 @@ see how your change affects other areas of the code, etc.
 Please also include instructions for how your reviewer can validate your changes.
 --->
 
-## Additional Context
+# Additional Context
+<!--- optional - delete if empty --->
 <!--- Please add any reviewer questions, details worth noting, etc. that will help in
 assessing this change.  --->
 

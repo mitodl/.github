@@ -20,8 +20,10 @@ about: "Report an error condition or unexpected behavior"
 4.
 <!--- delete any unused steps -->
 
-## Possible Solution (optional)
+## Possible Solution
+<!--- optional - delete if empty --->
 <!--- Do you have any ideas how to fix this bug? -->
 
 ## Additional Details
+<!--- optional - delete if empty --->
 <!--- If there are additional details that are helpful for addressing this bug please add them here --->
