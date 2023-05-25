@@ -1,6 +1,3 @@
----
-name: Pull Request
----
 # What are the relevant tickets?
 <!--- If it fixes an open issue, please link to the issue here. -->
 <!--- Closes # --->
