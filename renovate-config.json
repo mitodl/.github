@@ -32,7 +32,6 @@
   "pip-compile": {
     "fileMatch": ["(^|/).*?requirements.*?\\.in$"]
   },
-  {
   "docker": {
     "fileMatch": [
       "(^|/)Earthfile$",
