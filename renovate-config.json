@@ -4,7 +4,7 @@
     ":automergeMinor",
     ":rebaseStalePrs",
     ":separateMajorReleases",
-    "config:recommended"
+    "config:best-practices"
   ],
   "schedule": [
     "every weekend"
