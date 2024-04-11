@@ -1,10 +1,13 @@
 {
   "assigneesFromCodeOwners": true,
+  "configMigration": true,
   "extends": [
     ":automergeMinor",
+    ":pinDevDependencies",
     ":rebaseStalePrs",
     ":separateMajorReleases",
-    "config:best-practices"
+    "config:recommended",
+    "helpers:pinGitHubActionDigests"
   ],
   "schedule": [
     "every weekend"
