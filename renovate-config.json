@@ -4,6 +4,7 @@
   "extends": [
     ":automergeMinor",
     ":pinDevDependencies",
+    ":preserveSemverRanges",
     ":rebaseStalePrs",
     ":separateMajorReleases",
     "config:recommended",
