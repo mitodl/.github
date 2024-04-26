@@ -42,6 +42,12 @@
         "minor",
         "patch"
       ]
+    },
+    {
+      "matchSourceUrlPrefixes": [
+        "https://github.com/ckeditor/ckeditor5/"
+      ],
+      "groupName": "ckeditor5"
     }
   ],
   "pip-compile": {
