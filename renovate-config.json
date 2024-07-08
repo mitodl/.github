@@ -51,7 +51,8 @@
     },
     {
       "matchPackageNames": ["xmlsec"],
-      "allowedVersions": "!/1\\.3\\.14/"
+      "allowedVersions": "!/1\\.3\\.14/",
+      "automerge": false
     }
   ],
   "pip-compile": {
