@@ -27,7 +27,11 @@
         "*.Dockerfile",
         "Dockerfile.*",
         "*.dockerfile"
-      ]
+      ],
+      {
+        "matchManagers": ["npm"],
+        "automerge": false
+      }
     },
     {
       "groupName": "all non-major dev-dependencies",
