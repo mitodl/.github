@@ -61,6 +61,12 @@
       ],
       "allowedVersions": "!/1\\.3\\.14/",
       "automerge": false
+    },
+    {
+      "matchPackageNames": [
+        "python"
+      ],
+      "automerge": false
     }
   ],
   "pip-compile": {
