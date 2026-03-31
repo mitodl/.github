@@ -8,6 +8,10 @@
     "config:best-practices"
   ],
   "minimumReleaseAge": "14 days",
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
   "schedule": [
     "every weekend"
   ],
