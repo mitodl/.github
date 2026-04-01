@@ -2,7 +2,6 @@
   "assigneesFromCodeOwners": true,
   "extends": [
     ":automergeMinor",
-    ":preserveSemverRanges",
     ":rebaseStalePrs",
     ":separateMajorReleases",
     "config:best-practices"
