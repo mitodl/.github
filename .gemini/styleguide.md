@@ -37,16 +37,16 @@ and preferences within our organization.
   attributes, and exceptions.
 * **Use PEP 257 docstrings:** This helps with automated documentation generation.
     ```python
-        def my_function(param1, param2):
+        def add(param1, param2):
             """Single-line summary.
 
             More detailed description, if necessary.
 
-            :param x: The first number.
-            :param y: The second number.
-            :return: The sum of x and y.
+            :param param1: The first number.
+            :param param2: The second number.
+            :return: The sum of param1 and param2.
 
-            :raises TypeError: If x or y is not a number.
+            :raises TypeError: If param1 or param2 is not a number.
 
             Example:
             >>> add(2, 3)
@@ -65,7 +65,7 @@ and preferences within our organization.
 * **Use complete sentences:** Start comments with a capital letter and use proper punctuation.
 
 ## Logging
-* **Use a standard logging framework:**  Company X uses the built-in `logging` module.
+* **Use a standard logging framework:**  MIT Open Learning uses the built-in `logging` module.
 * **Log at appropriate levels:** DEBUG, INFO, WARNING, ERROR, CRITICAL
 * **Provide context:** Include relevant information in log messages to aid debugging.
 
