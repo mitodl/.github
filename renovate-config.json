@@ -31,7 +31,7 @@
         "(^|/)prek\\.toml$"
       ],
       "matchStrings": [
-        "repo\\s*=\\s*[\"']https://github\\.com/(?<depName>[^\"']+)[\"']\\s*\\n\\s*rev\\s*=\\s*[\"'](?<currentValue>[^\"']+)[\"']"
+        "repo\\s*=\\s*[\"']https://github\\.com/(?<depName>[^\"']+)[\"'][\\s\\S]*?rev\\s*=\\s*[\"'](?<currentValue>[^\"']+)[\"']"
       ],
       "datasourceTemplate": "github-tags"
     }
