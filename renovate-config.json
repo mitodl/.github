@@ -21,6 +21,21 @@
     "every weekend"
   ],
   "timezone": "US/Eastern",
+  "pre-commit": {
+    "enabled": true
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/)prek\\.toml$"
+      ],
+      "matchStrings": [
+        "repo\\s*=\\s*[\"']https://github\\.com/(?<depName>[^\"']+)[\"']\\s*\\n\\s*rev\\s*=\\s*[\"'](?<currentValue>[^\"']+)[\"']"
+      ],
+      "datasourceTemplate": "github-tags"
+    }
+  ],
   "packageRules": [
     {
       "matchManagers": [
