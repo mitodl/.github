@@ -6,7 +6,7 @@
     ":separateMajorReleases",
     "config:best-practices"
   ],
-  "minimumReleaseAge": "14 days",
+  "minimumReleaseAge": "7 days",
   "platformAutomerge": false,
   "lockFileMaintenance": {
     "enabled": true,
