@@ -7,6 +7,7 @@
     "config:best-practices"
   ],
   "minimumReleaseAge": "7 days",
+  "internalChecksFilter": "strict",
   "platformAutomerge": false,
   "lockFileMaintenance": {
     "enabled": true,
@@ -15,12 +16,16 @@
   },
   "osvVulnerabilityAlerts": true,
   "vulnerabilityAlerts": {
-    "enabled": true
+    "enabled": true,
+    "minimumReleaseAge": "7 days"
   },
   "schedule": [
     "every weekend"
   ],
   "timezone": "US/Eastern",
+  "gitIgnoredAuthors": [
+    "114827586+autofix-ci[bot]@users.noreply.github.com"
+  ],
   "pre-commit": {
     "enabled": true
   },
@@ -86,6 +91,33 @@
         "python"
       ],
       "automerge": false
+    },
+    {
+      "description": "Our own PyPI packages skip the release-age wait, matching each repo's [tool.uv.exclude-newer-package] list, so apps pick up our fixes as soon as they are released.",
+      "matchDatasources": [
+        "pypi"
+      ],
+      "matchPackageNames": [
+        "mitol-*",
+        "ol-*",
+        "django-aqueduct",
+        "edx-api-client",
+        "edx-sysadmin",
+        "edx-username-changer",
+        "openedx-companion-auth",
+        "rapid-response-xblock"
+      ],
+      "minimumReleaseAge": null
+    },
+    {
+      "description": "Our own npm packages skip the release-age wait. ol-* is PyPI-only because unscoped ol-* npm packages belong to OpenLayers.",
+      "matchDatasources": [
+        "npm"
+      ],
+      "matchPackageNames": [
+        "@mitodl/**"
+      ],
+      "minimumReleaseAge": null
     }
   ],
   "pip-compile": {
