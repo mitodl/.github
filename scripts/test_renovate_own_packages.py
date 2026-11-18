@@ -25,6 +25,7 @@ class NpmNameFromPackageJson(unittest.TestCase):
         self.assertEqual(npm_name_from_package_json('{"name": "eslint-config-mitodl"}'), ["eslint-config-mitodl"])
         self.assertEqual(npm_name_from_package_json('{"name": "app", "private": true}'), [])
         self.assertEqual(npm_name_from_package_json("{not json"), [])
+        self.assertEqual(npm_name_from_package_json('\ufeff{"name": "redux-asserts"}'), ["redux-asserts"])
 
 
 class UpdateConfig(unittest.TestCase):
@@ -50,11 +51,17 @@ class UpdateConfig(unittest.TestCase):
         with self.assertRaises(SystemExit):
             update_config(config, [], [])  # an empty crawl must not wipe the list
 
+    def test_refuses_empty_npm_list_under_the_cap(self):
+        config = self.config()
+        config["packageRules"][1]["matchPackageNames"] = ["@mitodl/**", "a", "b", "c"]
+        with self.assertRaises(SystemExit):
+            update_config(config, ["ol-llm"], [])
+
     def test_missing_rule_exits(self):
         config = self.config()
         del config["packageRules"][1]
         with self.assertRaises(SystemExit):
-            update_config(config, [], [])
+            update_config(config, ["ol-llm"], ["x"])
 
 
 if __name__ == "__main__":

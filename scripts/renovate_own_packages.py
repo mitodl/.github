@@ -2,8 +2,8 @@
 
 A package counts as ours when the `mitx-devops` account has a role on it:
 - npm: the registry search `maintainer:mitx-devops`, intersected with the names declared in
-  public mitodl repos' package.json (an npm owner can add mitx-devops to their own package
-  without its consent). @mitodl/* is covered by the scope glob, so only unscoped names are listed.
+  public, non-fork mitodl repos' package.json (an npm owner can add mitx-devops to their own
+  package without its consent, so a fork of their repo mustn't count). @mitodl/* is covered by the scope glob, so only unscoped names are listed.
 - PyPI: there is no "projects of user X" API, so candidates come from PyPI names with our
   prefixes plus the package names declared in public mitodl repos, and each is kept only
   if its JSON API `ownership.roles` includes mitx-devops.
@@ -71,7 +71,7 @@ def names_from_manifest(path, text):
 
 def npm_name_from_package_json(text):
     try:
-        data = json.loads(text)
+        data = json.loads(text.lstrip("\ufeff"))
     except json.JSONDecodeError:
         return []
     name = data.get("name") if isinstance(data, dict) and not data.get("private") else None
@@ -111,12 +111,14 @@ def pypi_is_ours(name):
 
 
 def declared_names():
-    """(PyPI names, npm names) declared in public, non-archived mitodl repos."""
-    repos = gh("repo", "list", "mitodl", "--no-archived", "--visibility", "public", "--limit", "1000",
-               "--json", "name", "--jq", ".[].name").split()
+    """(PyPI names, npm names) declared in public, non-archived mitodl repos; npm names from non-forks only."""
+    repos = json.loads(gh("repo", "list", "mitodl", "--no-archived", "--visibility", "public", "--limit", "1000",
+                          "--json", "name,isFork"))
     with cf.ThreadPoolExecutor(8) as ex:
-        results = list(ex.map(repo_manifest_names, repos))
-    return {normalize(n) for pypi, _ in results for n in pypi}, {n for _, npm in results for n in npm}
+        results = list(ex.map(repo_manifest_names, [r["name"] for r in repos]))
+    pypi = {normalize(n) for names, _ in results for n in names}
+    npm = {n for r, (_, names) in zip(repos, results) if not r["isFork"] for n in names}
+    return pypi, npm
 
 
 def our_pypi_packages(declared_pypi):
@@ -151,7 +153,10 @@ def exemption_rule(config, datasource):
 def update_config(config, pypi, npm_unscoped):
     """Set both exemption lists; return {datasource: (added, removed)}."""
     changes = {}
-    for datasource, names in (("pypi", pypi), ("npm", [NPM_SCOPE_GLOB, *npm_unscoped])):
+    for datasource, found in (("pypi", pypi), ("npm", npm_unscoped)):
+        if not found:
+            sys.exit(f"refusing to write: the {datasource} crawl found no packages")
+        names = found if datasource == "pypi" else [NPM_SCOPE_GLOB, *found]
         rule = exemption_rule(config, datasource)
         old = rule["matchPackageNames"]
         added, removed = sorted(set(names) - set(old)), sorted(set(old) - set(names))

@@ -46,7 +46,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          open_pr=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[].number')
+          # --head matches the branch name in any fork, so keep only PRs from this repository
+          open_pr=$(gh pr list --head "$BRANCH" --base main --state open --json number,isCrossRepository \
+            --jq '[.[] | select(.isCrossRepository | not) | .number] | first // empty')
 
           if git diff --quiet; then
             echo "The exemption list is up to date."
