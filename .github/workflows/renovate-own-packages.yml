@@ -1,0 +1,67 @@
+name: Update Renovate own-package exemptions
+
+# Regenerates the list of our own PyPI/npm packages that skip Renovate's release-age wait
+# (scripts/renovate_own_packages.py) and opens a PR when it changes. A person reviews and merges it.
+
+on:
+  schedule:
+    - cron: "0 13 * * 1" # Mondays
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: renovate-own-packages
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Regenerate the exemption list
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write # push the update branch
+      pull-requests: write # open or edit the update PR
+    env:
+      BRANCH: renovate-own-packages/update
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Test the script
+        run: python3 -m unittest discover scripts
+
+      - name: Regenerate the list
+        run: python3 scripts/renovate_own_packages.py --write renovate-config.json > "$RUNNER_TEMP/changes.md"
+
+      - name: Validate and open or update the PR
+        run: |
+          if git diff --quiet; then
+            echo "The exemption list is up to date."
+            exit 0
+          fi
+          npx --yes --package renovate@44.251.0 -- renovate-config-validator renovate-config.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git commit -am "config: update the Renovate own-package exemptions"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$BRANCH"
+
+          {
+            echo "Weekly regeneration by \`scripts/renovate_own_packages.py\`: a package is listed when the \`mitx-devops\` account owns it on PyPI or npm."
+            echo
+            cat "$RUNNER_TEMP/changes.md"
+            echo
+            echo "Before merging, check that each added package is one we publish and still maintain. Add any that shouldn't be exempt to \`EXCLUDE\` in the script."
+          } > "$RUNNER_TEMP/body.md"
+
+          if [ -n "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[].number')" ]; then
+            gh pr edit "$BRANCH" --body-file "$RUNNER_TEMP/body.md"
+          else
+            gh pr create --head "$BRANCH" --base "$GITHUB_REF_NAME" \
+              --title "config: update the Renovate own-package exemptions" --body-file "$RUNNER_TEMP/body.md"
+          fi
