@@ -1,8 +1,9 @@
 """Regenerate the list of our own packages that skip Renovate's release-age wait.
 
 A package counts as ours when the `mitx-devops` account has a role on it:
-- npm: the registry search `maintainer:mitx-devops` lists them. @mitodl/* is covered by
-  the scope glob (only our org can publish there), so only unscoped names are listed.
+- npm: the registry search `maintainer:mitx-devops`, intersected with the names declared in
+  public mitodl repos' package.json (an npm owner can add mitx-devops to their own package
+  without its consent). @mitodl/* is covered by the scope glob, so only unscoped names are listed.
 - PyPI: there is no "projects of user X" API, so candidates come from PyPI names with our
   prefixes plus the package names declared in public mitodl repos, and each is kept only
   if its JSON API `ownership.roles` includes mitx-devops.
@@ -30,6 +31,8 @@ PREFIXES = ("ol-", "mitol-")
 VALID_NAME = re.compile(r"[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?")  # PEP 508 project name
 SKIP_PATH = re.compile(r"(^|/)(node_modules|tests?|test_data|fixtures|examples?|\.venv)/")
 NPM_SCOPE_GLOB = "@mitodl/**"
+# Fail closed: more removals than this in one run looks like a broken crawl, not real churn
+MAX_REMOVALS = 3
 
 
 def get_json(url, accept="application/json"):
@@ -66,23 +69,39 @@ def names_from_manifest(path, text):
     return [name] if isinstance(name, str) and VALID_NAME.fullmatch(name) else []
 
 
-def repo_manifest_names(repo):
+def npm_name_from_package_json(text):
     try:
-        tree = json.loads(gh("api", f"repos/mitodl/{repo}/git/trees/HEAD?recursive=1"))["tree"]
-    except subprocess.CalledProcessError:
-        return []  # empty repo
-    found = []
-    for t in tree:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return []
+    name = data.get("name") if isinstance(data, dict) and not data.get("private") else None
+    return [name] if isinstance(name, str) else []
+
+
+def repo_manifest_names(repo):
+    """Return (PyPI names, npm names) declared in a repo. Any failure raises, so a run never silently shrinks."""
+    try:
+        listing = json.loads(gh("api", f"repos/mitodl/{repo}/git/trees/HEAD?recursive=1"))
+    except subprocess.CalledProcessError as e:
+        if "Git Repository is empty" in e.stderr:
+            return [], []
+        raise RuntimeError(f"listing {repo}: {e.stderr.strip()}") from e
+    if listing.get("truncated"):
+        raise RuntimeError(f"{repo}: file listing truncated by the GitHub API")
+    pypi, npm = [], []
+    for t in listing["tree"]:
         path = t["path"]
-        if t["type"] != "blob" or path.rsplit("/", 1)[-1] not in ("pyproject.toml", "setup.py") or SKIP_PATH.search(path):
+        filename = path.rsplit("/", 1)[-1]
+        if t["type"] != "blob" or filename not in ("pyproject.toml", "setup.py", "package.json") or SKIP_PATH.search(path):
             continue
         # raw.githubusercontent.com doesn't count against the API rate limit
-        try:
-            with urllib.request.urlopen(f"https://raw.githubusercontent.com/mitodl/{repo}/HEAD/{path}", timeout=30) as resp:
-                found += names_from_manifest(path, resp.read().decode())
-        except urllib.error.HTTPError:
-            continue
-    return found
+        with urllib.request.urlopen(f"https://raw.githubusercontent.com/mitodl/{repo}/HEAD/{path}", timeout=30) as resp:
+            text = resp.read().decode()
+        if filename == "package.json":
+            npm += npm_name_from_package_json(text)
+        else:
+            pypi += names_from_manifest(path, text)
+    return pypi, npm
 
 
 def pypi_is_ours(name):
@@ -91,11 +110,17 @@ def pypi_is_ours(name):
     return any(r.get("user") == OWNER for r in roles)
 
 
-def our_pypi_packages():
+def declared_names():
+    """(PyPI names, npm names) declared in public, non-archived mitodl repos."""
     repos = gh("repo", "list", "mitodl", "--no-archived", "--visibility", "public", "--limit", "1000",
                "--json", "name", "--jq", ".[].name").split()
     with cf.ThreadPoolExecutor(8) as ex:
-        candidates = {normalize(n) for names in ex.map(repo_manifest_names, repos) for n in names}
+        results = list(ex.map(repo_manifest_names, repos))
+    return {normalize(n) for pypi, _ in results for n in pypi}, {n for _, npm in results for n in npm}
+
+
+def our_pypi_packages(declared_pypi):
+    candidates = set(declared_pypi)
     simple = get_json("https://pypi.org/simple/", accept="application/vnd.pypi.simple.v1+json")
     candidates |= {normalize(p["name"]) for p in simple["projects"] if normalize(p["name"]).startswith(PREFIXES)}
     candidates -= EXCLUDE
@@ -103,7 +128,7 @@ def our_pypi_packages():
         return sorted(n for n, ours in zip(sorted(candidates), ex.map(pypi_is_ours, sorted(candidates))) if ours)
 
 
-def our_unscoped_npm_packages():
+def our_unscoped_npm_packages(declared_npm):
     names, offset = [], 0
     while True:
         d = get_json(f"https://registry.npmjs.org/-/v1/search?text=maintainer:{OWNER}&size=250&from={offset}")
@@ -111,7 +136,7 @@ def our_unscoped_npm_packages():
         offset += len(d["objects"])
         if not d["objects"] or offset >= d["total"]:
             break
-    return sorted(n for n in names if not n.startswith("@mitodl/") and n not in EXCLUDE)
+    return sorted(n for n in names if not n.startswith("@mitodl/") and n in declared_npm and n not in EXCLUDE)
 
 
 def exemption_rule(config, datasource):
@@ -129,8 +154,11 @@ def update_config(config, pypi, npm_unscoped):
     for datasource, names in (("pypi", pypi), ("npm", [NPM_SCOPE_GLOB, *npm_unscoped])):
         rule = exemption_rule(config, datasource)
         old = rule["matchPackageNames"]
+        added, removed = sorted(set(names) - set(old)), sorted(set(old) - set(names))
+        if len(removed) > MAX_REMOVALS:
+            sys.exit(f"refusing to remove {len(removed)} {datasource} names in one run (limit {MAX_REMOVALS}): {removed}")
         rule["matchPackageNames"] = names
-        changes[datasource] = (sorted(set(names) - set(old)), sorted(set(old) - set(names)))
+        changes[datasource] = (added, removed)
     return changes
 
 
@@ -139,7 +167,8 @@ def main():
     parser.add_argument("--write", metavar="CONFIG", help="update the exemption rules in this Renovate config")
     args = parser.parse_args()
 
-    pypi, npm_unscoped = our_pypi_packages(), our_unscoped_npm_packages()
+    declared_pypi, declared_npm = declared_names()
+    pypi, npm_unscoped = our_pypi_packages(declared_pypi), our_unscoped_npm_packages(declared_npm)
     if not args.write:
         json.dump({"pypi": pypi, "npm_unscoped": npm_unscoped}, sys.stdout, indent=2)
         print()
