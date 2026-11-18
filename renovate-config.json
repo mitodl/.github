@@ -94,29 +94,80 @@
       "automerge": false
     },
     {
-      "description": "Our own PyPI packages skip the release-age wait, matching each repo's [tool.uv.exclude-newer-package] list, so apps pick up our fixes as soon as they are released.",
+      "description": "Our own PyPI packages skip the release-age wait, so apps pick up our fixes as soon as they are released. Exact names, not ol-*/mitol-* globs: anyone can register a matching name on PyPI. The list is every PyPI project the mitx-devops account owns, minus stale ones; each repo's [tool.uv.exclude-newer-package] list must also name a package for uv to accept it.",
       "matchDatasources": [
         "pypi"
       ],
       "matchPackageNames": [
-        "mitol-*",
-        "ol-*",
         "django-aqueduct",
         "edx-api-client",
+        "edx-sga",
         "edx-sysadmin",
         "edx-username-changer",
+        "mitol-django-apigateway",
+        "mitol-django-authentication",
+        "mitol-django-benchmark",
+        "mitol-django-common",
+        "mitol-django-digital-credentials",
+        "mitol-django-geoip",
+        "mitol-django-google-sheets",
+        "mitol-django-google-sheets-deferrals",
+        "mitol-django-google-sheets-refunds",
+        "mitol-django-hubspot-api",
+        "mitol-django-keycloak",
+        "mitol-django-mail",
+        "mitol-django-oauth-toolkit-extensions",
+        "mitol-django-observability",
+        "mitol-django-olposthog",
+        "mitol-django-openedx",
+        "mitol-django-payment-gateway",
+        "mitol-django-scim",
+        "mitol-django-transcoding",
+        "mitol-drf-lint",
+        "ol-agent-kit",
+        "ol-concourse",
+        "ol-llm",
+        "ol-openedx-ai-static-translations",
+        "ol-openedx-auto-select-language",
+        "ol-openedx-canvas-integration",
+        "ol-openedx-chat",
+        "ol-openedx-chat-xblock",
+        "ol-openedx-checkout-external",
+        "ol-openedx-course-export",
+        "ol-openedx-course-outline-api",
+        "ol-openedx-course-structure-api",
+        "ol-openedx-course-sync",
+        "ol-openedx-course-translations",
+        "ol-openedx-events-handler",
+        "ol-openedx-feedback",
+        "ol-openedx-git-auto-export",
+        "ol-openedx-logging",
+        "ol-openedx-lti-utilities",
+        "ol-openedx-otel-monitoring",
+        "ol-openedx-rapid-response-reports",
+        "ol-openedx-sentry",
+        "ol-openedx-uai-content-customization",
+        "ol-parliament",
+        "ol-social-auth",
+        "open-learning-ai-tutor",
         "openedx-companion-auth",
-        "rapid-response-xblock"
+        "rapid-response-xblock",
+        "witan-code",
+        "witan-core",
+        "witan-council"
       ],
       "minimumReleaseAge": null
     },
     {
-      "description": "Our own npm packages skip the release-age wait. ol-* is PyPI-only because unscoped ol-* npm packages belong to OpenLayers.",
+      "description": "Our own npm packages skip the release-age wait: the @mitodl scope, which only our org can publish to, plus the unscoped packages the mitx-devops account maintains.",
       "matchDatasources": [
         "npm"
       ],
       "matchPackageNames": [
-        "@mitodl/**"
+        "@mitodl/**",
+        "eslint-config-mitodl",
+        "redux-asserts",
+        "redux-hammock"
       ],
       "minimumReleaseAge": null
     }
