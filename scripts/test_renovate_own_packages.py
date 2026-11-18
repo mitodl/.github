@@ -47,9 +47,10 @@ class UpdateConfig(unittest.TestCase):
 
     def test_refuses_mass_removal(self):
         config = self.config()
-        config["packageRules"][0]["matchPackageNames"] = [f"pkg-{i}" for i in range(MAX_REMOVALS + 1)]
-        with self.assertRaises(SystemExit):
-            update_config(config, [], [])  # an empty crawl must not wipe the list
+        config["packageRules"][0]["matchPackageNames"] = ["ol-llm"] + [f"pkg-{i}" for i in range(MAX_REMOVALS + 1)]
+        with self.assertRaises(SystemExit) as cm:
+            update_config(config, ["ol-llm"], ["x"])  # non-empty, so it's the removal cap that refuses
+        self.assertIn("refusing to remove", str(cm.exception))
 
     def test_refuses_empty_npm_list_under_the_cap(self):
         config = self.config()
