@@ -170,6 +170,45 @@
         "redux-hammock"
       ],
       "minimumReleaseAge": null
+    },
+    {
+      "description": "A Docker digest update is the same tag rebuilt, usually for OS patches. Images such as nginx and mitodl/ol-python-base are rebuilt within a week, so the release-age wait would never clear.",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchUpdateTypes": [
+        "digest",
+        "pinDigest"
+      ],
+      "minimumReleaseAge": null
+    },
+    {
+      "description": "Renovate often gets no release date for Docker tags, and timestamp-required (the default) treats an undated release as never old enough; in mitxonline, mitxpro and lehrer that held back every Docker update. Undated Docker releases count as old enough instead; dated ones still wait.",
+      "matchDatasources": [
+        "docker"
+      ],
+      "minimumReleaseAgeBehaviour": "timestamp-optional"
+    },
+    {
+      "description": "Our own images skip the release-age wait: we build them, and the mitodl Docker Hub namespace only our org can push to.",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "mitodl/**"
+      ],
+      "minimumReleaseAge": null
+    },
+    {
+      "description": "Docker version updates skip the release-age wait above, and an image's minor version can be a breaking runtime upgrade (Python 3.13 to 3.14), so a person merges them instead of :automergeMinor.",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": false
     }
   ],
   "pip-compile": {
