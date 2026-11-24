@@ -1,0 +1,80 @@
+name: Update Renovate own-package exemptions
+
+# Regenerates the list of our own PyPI/npm packages that skip Renovate's release-age wait
+# (scripts/renovate_own_packages.py) and opens a PR when it changes. A person reviews and merges it.
+# The update branch is rebuilt from main on every run, so don't push to it: change EXCLUDE on main instead.
+
+on:
+  schedule:
+    - cron: "0 13 * * 1" # Mondays
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: renovate-own-packages
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Regenerate the exemption list
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write # push the update branch
+      pull-requests: write # open, edit or close the update PR
+    env:
+      BRANCH: renovate-own-packages/update
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main # a dispatch from another branch still builds from, and targets, main
+          persist-credentials: false
+
+      - name: Test the script
+        run: python3 -m unittest discover scripts
+
+      - name: Regenerate the list
+        env:
+          GH_TOKEN: ${{ github.token }} # gh lists the org's repos and their files
+        run: python3 scripts/renovate_own_packages.py --write renovate-config.json > "$RUNNER_TEMP/changes.md"
+
+      # No renovate-config-validator: it would install Renovate's dependency tree unpinned on every run,
+      # and the script only replaces two name lists (covered by the unit tests).
+      - name: Open, update or close the PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # --head matches the branch name in any fork, so keep only PRs from this repository
+          open_pr=$(gh pr list --head "$BRANCH" --base main --state open --json number,isCrossRepository \
+            --jq '[.[] | select(.isCrossRepository | not) | .number] | first // empty')
+
+          if git diff --quiet; then
+            echo "The exemption list is up to date."
+            if [ -n "$open_pr" ]; then
+              gh pr close "$open_pr" --delete-branch --comment "Closing: this week's run matches main, so this update is stale."
+            fi
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git commit -am "config: update the Renovate own-package exemptions"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$BRANCH"
+
+          {
+            echo "Weekly regeneration by \`scripts/renovate_own_packages.py\`: a package is listed when the \`mitx-devops\` account owns it on PyPI or npm."
+            echo
+            cat "$RUNNER_TEMP/changes.md"
+            echo
+            echo "Before merging, check that each added package is one we publish and still maintain. Add any that shouldn't be exempt to \`EXCLUDE\` in the script."
+          } > "$RUNNER_TEMP/body.md"
+
+          if [ -n "$open_pr" ]; then
+            gh pr edit "$open_pr" --body-file "$RUNNER_TEMP/body.md"
+          else
+            gh pr create --head "$BRANCH" --base main \
+              --title "config: update the Renovate own-package exemptions" --body-file "$RUNNER_TEMP/body.md"
+          fi
