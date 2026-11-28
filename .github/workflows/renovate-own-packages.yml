@@ -18,7 +18,7 @@ concurrency:
 jobs:
   update:
     name: Regenerate the exemption list
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     permissions:
       contents: write # push the update branch
